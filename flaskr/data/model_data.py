@@ -1,25 +1,14 @@
-from enum import Enum, auto
+from enum import Enum
 from typing import Iterable
 
 from pandas import DataFrame
+
+from .common import Element
 
 
 class Scenario(Enum):
     RCP45 = 'rcp45'
     RCP85 = 'rcp85'
-
-
-class Element(Enum):
-    TEMP_MAX = auto()
-    TEMP_MIN = auto()
-    TEMP_AVG = auto()
-    RAIN_MM = auto()
-
-
-def get_observation_data(
-        element: Element,
-        station_names: Iterable[str]) -> DataFrame:
-    raise NotImplementedError()
 
 
 def get_model_data(
