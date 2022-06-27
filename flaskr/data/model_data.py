@@ -5,27 +5,21 @@ from typing import Iterable
 import pandas as pd
 from pandas import DataFrame
 
-from .common import Element
+from .common import REQUIRED_COLUMNS, VALUE_COL, Element
 
 TEMP_MIN_COL = 'tmin'
 TEMP_MAX_COL = 'tmax'
 RAIN_MM_COL = 'pr'
-VALUE_COL = 'value'
-YEAR_COL = 'year'
-MONTH_COL = 'month'
-DAY_COL = 'day'
 SCENARIO_COL = 'scenario'
 MODEL_COL = 'model'
 STATION_COL = 'station'
-
-REQUIRED_COLUMNS = [YEAR_COL, MONTH_COL, DAY_COL,
-                    VALUE_COL, MODEL_COL]
 
 RESOURCE_IDS = {
     (Element.TEMP_MIN, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
     (Element.TEMP_MAX, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
     (Element.TEMP_AVG, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
 }
+
 
 class Scenario(Enum):
     RCP45 = 'rcp45'
