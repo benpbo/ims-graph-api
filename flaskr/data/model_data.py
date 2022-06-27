@@ -18,6 +18,9 @@ SCENARIO_COL = 'scenario'
 MODEL_COL = 'model'
 STATION_COL = 'station'
 
+REQUIRED_COLUMNS = [YEAR_COL, MONTH_COL, DAY_COL,
+                    VALUE_COL, MODEL_COL]
+
 RESOURCE_IDS = {
     (Element.TEMP_MIN, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
     (Element.TEMP_MAX, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
@@ -62,9 +65,7 @@ def _get_station_model_data(
     df = _add_value_column(df, element)
 
     # Return the dataframe with the required columns
-    required_columns = [YEAR_COL, MONTH_COL, DAY_COL,
-                        VALUE_COL, MODEL_COL]
-    return df[required_columns]
+    return df[REQUIRED_COLUMNS]
 
 
 def _add_value_column(df: DataFrame, element: Element) -> DataFrame:
