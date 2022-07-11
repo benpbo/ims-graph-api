@@ -1,5 +1,6 @@
 from enum import Enum
 from functools import reduce
+from os import path
 from typing import Iterable
 
 import pandas as pd
@@ -13,12 +14,6 @@ RAIN_MM_COL = 'pr'
 SCENARIO_COL = 'scenario'
 MODEL_COL = 'model'
 STATION_COL = 'station'
-
-RESOURCE_IDS = {
-    (Element.TEMP_MIN, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
-    (Element.TEMP_MAX, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
-    (Element.TEMP_AVG, 'AFULA'): 'b0f78f49-923e-4492-aff5-39fc85750d48',
-}
 
 
 class Scenario(Enum):
@@ -46,14 +41,14 @@ def _get_station_model_data(
         model_names: Iterable[str],
         scenario: Scenario) -> DataFrame:
     # Read csv
-    resource_id = RESOURCE_IDS[(element, station_name)]
-    file_name = f'{resource_id}.csv'
+    file_name = path.join('db', 'models', f'{element.type}.csv')
     df = pd.read_csv(file_name)
 
-    # Filter for specific scenario and chosen models
+    # Apply filters
+    station_mask = df[STATION_COL] == station_name
     scenario_mask = df[SCENARIO_COL] == scenario.value
     model_mask = df[MODEL_COL].isin(model_names)
-    df = df[scenario_mask & model_mask]
+    df = df[station_mask & scenario_mask & model_mask]
 
     # Add value column
     df = _add_value_column(df, element)
