@@ -24,7 +24,7 @@ def create_app(test_config=None):
         pass
 
     @app.route('/temperature', methods=['GET'])
-    def temperture():
+    def temperature():
         station = request.args.get('station', type=str)
         model = request.args.get('model', type=str)
         match request.args.get('scenario', type=str):
