@@ -38,6 +38,7 @@ def create_app(test_config=None):
                 return f'Bad scenario: {unmatched}', 400
 
         data = get_model_data(
+            app.open_resource,
             Element.TEMP_AVG, (station, ), (model, ), scenario)
 
         return Response(data.to_csv(None), mimetype=mimetypes.types_map['.csv'])

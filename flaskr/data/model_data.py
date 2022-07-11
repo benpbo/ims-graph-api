@@ -1,7 +1,6 @@
 from enum import Enum
-from functools import reduce
 from os import path
-from typing import Iterable
+from typing import IO, Callable, Iterable
 
 import pandas as pd
 from pandas import DataFrame
@@ -22,30 +21,18 @@ class Scenario(Enum):
 
 
 def get_model_data(
+        reader: Callable[[str], IO],
         element: Element,
         station_names: Iterable[str],
         model_names: Iterable[str],
         scenario: Scenario) -> DataFrame:
-    data = (
-        _get_station_model_data(element, station_name, model_names, scenario)
-        for station_name in station_names)
-
-    return reduce(
-        lambda sum, station_data: pd.concat((sum, station_data)),
-        data)
-
-
-def _get_station_model_data(
-        element: Element,
-        station_name: str,
-        model_names: Iterable[str],
-        scenario: Scenario) -> DataFrame:
     # Read csv
     file_name = path.join('db', 'models', f'{element.type}.csv')
-    df = pd.read_csv(file_name)
+    with reader(file_name) as file:
+        df = pd.read_csv(file)
 
     # Apply filters
-    station_mask = df[STATION_COL] == station_name
+    station_mask = df[STATION_COL].isin(station_names)
     scenario_mask = df[SCENARIO_COL] == scenario.value
     model_mask = df[MODEL_COL].isin(model_names)
     df = df[station_mask & scenario_mask & model_mask]
