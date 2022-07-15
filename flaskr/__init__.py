@@ -48,7 +48,7 @@ def create_app(test_config=None):
         graph = transform_to_graph(data, element)
 
         return Response(
-            graph.to_csv(None),
-            mimetype=mimetypes.types_map['.csv'])
+            graph.to_json(),
+            mimetype='application/json')
 
     return app
