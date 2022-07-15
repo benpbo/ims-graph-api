@@ -24,8 +24,8 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route('/temperature', methods=['GET'])
-    def temperature():
+    @app.route('/graph', methods=['GET'])
+    def get_graph():
         element = Element.TEMP_AVG
 
         stations = request.args.getlist('station', type=str)
