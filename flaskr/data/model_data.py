@@ -15,7 +15,7 @@ def get_model_data(
         model_names: Iterable[str],
         scenario: Scenario) -> DataFrame:
     # Read csv
-    file_name = path.join('db', 'models', f'{element.type}.csv')
+    file_name = path.join('db', 'models', f'{element.type.name.lower()}.csv')
     with reader(file_name) as file:
         df = pd.read_csv(file)
 

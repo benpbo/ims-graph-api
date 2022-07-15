@@ -14,7 +14,8 @@ def get_observation_data(
         element: Element,
         station_names: Iterable[str]) -> DataFrame:
     # Read csv
-    file_name = path.join('db', 'observations', f'{element.type}.csv')
+    file_name = path.join('db', 'observations',
+                          f'{element.type.name.lower()}.csv')
     with reader(file_name) as file:
         df = pd.read_csv(file)
 
