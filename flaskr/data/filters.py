@@ -6,8 +6,9 @@ from typing import Iterable
 
 from pandas import DataFrame, Series
 
-from .common import STATION_COL
+from .common import RAIN_MM_COL, STATION_COL, TEMP_MAX_COL, TEMP_MIN_COL, YEAR_COL, ElementType
 
+MISSING_OBSERVATION = -99.9
 SCENARIO_COL = 'scenario'
 MODEL_COL = 'model'
 
@@ -35,6 +36,23 @@ class StationFilter(FilterBase):
 
     def create_mask(self, df: DataFrame) -> Series[bool]:
         return df[STATION_COL].isin(self._stations)
+
+
+class ObservationFilter(StationFilter):
+    def __init__(self, stations: Iterable[str], element_type: ElementType) -> None:
+        super().__init__(stations)
+
+        self._element_type = element_type
+
+    def create_mask(self, df: DataFrame) -> Series[bool]:
+        match self._element_type:
+            case ElementType.TEMPERATURE:
+                mask = ~df[TEMP_MIN_COL].eq(MISSING_OBSERVATION) \
+                    & ~df[TEMP_MAX_COL].eq(MISSING_OBSERVATION)
+            case ElementType.RAIN:
+                mask = ~df[RAIN_MM_COL].eq(MISSING_OBSERVATION)
+
+        return super().create_mask(df) & mask
 
 
 class ModelFilter(StationFilter):

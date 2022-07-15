@@ -4,7 +4,7 @@ from typing import IO, Callable, Iterable
 import pandas as pd
 from pandas import DataFrame
 
-from flaskr.data.filters import StationFilter
+from flaskr.data.filters import ObservationFilter
 
 from .common import Element
 
@@ -20,5 +20,5 @@ def get_observation_data(
         df = pd.read_csv(file)
 
     # Apply filters
-    df_filter = StationFilter(station_names)
+    df_filter = ObservationFilter(station_names, element.type)
     return df_filter.filter(df)
