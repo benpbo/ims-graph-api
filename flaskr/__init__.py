@@ -3,6 +3,8 @@ import os
 
 from flask import Flask, Response, request
 
+from flaskr.data.common import transform_to_graph
+
 from .data import Element, Scenario, get_model_data, get_observation_data
 
 
@@ -25,6 +27,8 @@ def create_app(test_config=None):
 
     @app.route('/temperature', methods=['GET'])
     def temperature():
+        element = Element.TEMP_AVG
+
         stations = request.args.getlist('station', type=str)
         if not stations:
             return 'Query parameter for "station" is missing.', 400
@@ -36,13 +40,15 @@ def create_app(test_config=None):
                 return 'At least one of the following query parameters is missing: scenario, models.', 400
 
             data = get_model_data(
-                app.open_resource,
-                Element.TEMP_AVG, stations, models, scenario)
+                app.open_resource, element, stations, models, scenario)
         else:
             data = get_observation_data(
-                app.open_resource,
-                Element.TEMP_AVG, stations)
+                app.open_resource, element, stations)
 
-        return Response(data.to_csv(None), mimetype=mimetypes.types_map['.csv'])
+        graph = transform_to_graph(data, element)
+
+        return Response(
+            graph.to_csv(None),
+            mimetype=mimetypes.types_map['.csv'])
 
     return app

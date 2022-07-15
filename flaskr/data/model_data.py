@@ -4,7 +4,7 @@ from typing import IO, Callable, Iterable
 import pandas as pd
 from pandas import DataFrame
 
-from .common import Element, transform_to_graph
+from .common import Element
 from .filters import ModelFilter, Scenario
 
 
@@ -21,6 +21,4 @@ def get_model_data(
 
     # Apply filters
     df_filter = ModelFilter(station_names, model_names, scenario)
-    df = df_filter.filter(df)
-
-    return transform_to_graph(df, element)
+    return df_filter.filter(df)
