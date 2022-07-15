@@ -1,7 +1,6 @@
-import mimetypes
 import os
 
-from flask import Flask, Response, request
+from flask import Flask, jsonify, request
 
 from flaskr.data.common import transform_to_graph
 
@@ -47,8 +46,6 @@ def create_app(test_config=None):
 
         graph = transform_to_graph(data, element)
 
-        return Response(
-            graph.to_json(),
-            mimetype='application/json')
+        return jsonify(graph.to_dict(orient='records'))
 
     return app
