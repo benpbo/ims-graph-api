@@ -1,19 +1,11 @@
-from enum import Enum
 from os import path
 from typing import IO, Callable, Iterable
 
 import pandas as pd
 from pandas import DataFrame
 
-from .common import STATION_COL, Element, transform_to_graph
-
-SCENARIO_COL = 'scenario'
-MODEL_COL = 'model'
-
-
-class Scenario(Enum):
-    RCP45 = 'rcp45'
-    RCP85 = 'rcp85'
+from .common import Element, transform_to_graph
+from .filters import ModelFilter, Scenario
 
 
 def get_model_data(
@@ -28,9 +20,7 @@ def get_model_data(
         df = pd.read_csv(file)
 
     # Apply filters
-    station_mask = df[STATION_COL].isin(station_names)
-    scenario_mask = df[SCENARIO_COL] == scenario.value
-    model_mask = df[MODEL_COL].isin(model_names)
-    df = df[station_mask & scenario_mask & model_mask]
+    df_filter = ModelFilter(station_names, model_names, scenario)
+    df = df_filter.filter(df)
 
     return transform_to_graph(df, element)
