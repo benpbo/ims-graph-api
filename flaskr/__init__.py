@@ -13,6 +13,7 @@ from flaskr.data.common import transform_to_graph
 from .data import Element, Scenario, get_model_data, get_observation_data
 
 OBSERVATIONS_GRAPH_ARGS = {
+    'element': EnumField(Element, required=True),
     'station': fields.List(fields.Str, required=True),
 }
 
@@ -51,7 +52,7 @@ def create_app(test_config=None):
         error_status_code=http.HTTPStatus.BAD_REQUEST,
         location='query')
     def get_observations_graph(args: dict[str, Any]):
-        element = Element.TEMP_AVG
+        element = args['element']
         data = get_observation_data(
             app.open_resource,
             element,
@@ -65,7 +66,7 @@ def create_app(test_config=None):
         error_status_code=http.HTTPStatus.BAD_REQUEST,
         location='query')
     def get_models_graph(args: dict[str, Any]):
-        element = Element.TEMP_AVG
+        element = args['element']
         data = get_model_data(
             app.open_resource,
             element,
