@@ -69,4 +69,4 @@ class ModelFilter(StationFilter):
     def create_mask(self, df: DataFrame) -> Series[bool]:
         return super().create_mask(df) \
             & df[MODEL_COL].isin(self._models) \
-            & df[SCENARIO_COL].eq(self._scenario)
+            & df[SCENARIO_COL].eq(self._scenario.value)
