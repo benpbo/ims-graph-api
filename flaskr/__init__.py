@@ -1,6 +1,9 @@
+import http
 import os
 
 from flask import Flask, jsonify, request
+from webargs import fields
+from webargs.flaskparser import use_args
 
 from flaskr.data.common import transform_to_graph
 
@@ -25,12 +28,15 @@ def create_app(test_config=None):
         pass
 
     @app.route('/graph', methods=['GET'])
-    def get_graph():
+    @use_args(
+        {
+            'station': fields.List(fields.Str, required=True),
+        },
+        error_status_code=http.HTTPStatus.BAD_REQUEST,
+        location='query')
+    def get_graph(args):
         element = Element.TEMP_AVG
-
-        stations = request.args.getlist('station', type=str)
-        if not stations:
-            return 'Query parameter for "station" is missing.', 400
+        stations: list[str] = args['station']
 
         if 'scenario' in request.args:
             scenario = request.args.get('scenario', type=Scenario)
