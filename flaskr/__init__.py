@@ -8,9 +8,8 @@ from pandas import DataFrame
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from flaskr.data.common import transform_to_graph
-
-from .data import Element, Scenario, get_model_data, get_observation_data
+from .data import (Element, Scenario, get_model_data, get_observation_data,
+                   transform_to_graph)
 
 OBSERVATIONS_GRAPH_ARGS = {
     'element': EnumField(Element, required=True),
