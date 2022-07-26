@@ -4,9 +4,10 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Iterable
 
-from pandas import DataFrame, Series
+from flask_sqlalchemy import BaseQuery, Model
+from sqlalchemy import and_, or_
 
-from .common import RAIN_MM_COL, STATION_COL, TEMP_MAX_COL, TEMP_MIN_COL, YEAR_COL, ElementType
+from .common import ElementType
 
 MISSING_OBSERVATION = -99.9
 SCENARIO_COL = 'scenario'
@@ -19,12 +20,12 @@ class Scenario(Enum):
 
 
 class FilterBase(ABC):
-    def filter(self, df: DataFrame) -> DataFrame:
-        mask = self.create_mask(df)
-        return df[mask]
+    def filter(self, table: Model, query: BaseQuery) -> BaseQuery:
+        criterions = self.create_criterion(table)
+        return query.filter(and_(*criterions))
 
     @abstractmethod
-    def create_mask(self, df: DataFrame) -> Series[bool]:
+    def create_criterion(self, table: Model) -> Iterable:
         ...
 
 
@@ -34,8 +35,8 @@ class StationFilter(FilterBase):
 
         self._stations = stations
 
-    def create_mask(self, df: DataFrame) -> Series[bool]:
-        return df[STATION_COL].isin(self._stations)
+    def create_criterion(self, table: Model) -> Iterable:
+        yield table.station.in_(self._stations)
 
 
 class ObservationFilter(StationFilter):
@@ -44,18 +45,19 @@ class ObservationFilter(StationFilter):
 
         self._element_type = element_type
 
-    def create_mask(self, df: DataFrame) -> Series[bool]:
+    def create_criterion(self, table: Model) -> Iterable:
+        yield from super().create_criterion(table)
+
         match self._element_type:
             case ElementType.TEMPERATURE:
-                mask = ~df[TEMP_MIN_COL].eq(MISSING_OBSERVATION) \
-                    & ~df[TEMP_MAX_COL].eq(MISSING_OBSERVATION)
+                yield or_(
+                    table.tmin == MISSING_OBSERVATION,
+                    table.tmax == MISSING_OBSERVATION)
             case ElementType.RAIN:
-                mask = ~df[RAIN_MM_COL].eq(MISSING_OBSERVATION)
-
-        return super().create_mask(df) & mask
+                yield table.pr == MISSING_OBSERVATION
 
 
-class ModelFilter(StationFilter):
+class PredictionFilter(StationFilter):
     def __init__(
             self,
             stations: Iterable[str],
@@ -66,7 +68,7 @@ class ModelFilter(StationFilter):
         self._models = models
         self._scenario = scenario
 
-    def create_mask(self, df: DataFrame) -> Series[bool]:
-        return super().create_mask(df) \
-            & df[MODEL_COL].isin(self._models) \
-            & df[SCENARIO_COL].eq(self._scenario.value)
+    def create_criterion(self, table: Model) -> Iterable:
+        yield from super().create_criterion(table)
+        yield table.model.in_(self._models)
+        yield table.scenario == self._scenario

@@ -9,7 +9,9 @@ from pandas import DataFrame
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from .data import (Element, Scenario, get_model_data, get_observation_data,
+from flaskr.data.filters import PredictionFilter, ObservationFilter
+
+from .data import (Element, Scenario, get_data,
                    transform_to_graph)
 
 OBSERVATIONS_GRAPH_ARGS = {
@@ -17,7 +19,7 @@ OBSERVATIONS_GRAPH_ARGS = {
     'station': fields.List(fields.Str, required=True),
 }
 
-MODELS_GRAPH_ARGS = {
+PREDICTION_GRAPH_ARGS = {
     **OBSERVATIONS_GRAPH_ARGS,
     'scenario': EnumField(Scenario, required=True),
     'model': fields.List(fields.Str, required=True),
@@ -85,27 +87,29 @@ def create_app(test_config=None):
         location='query')
     def get_observations_graph(args: dict[str, Any]):
         element = args['element']
-        data = get_observation_data(
-            app.open_resource,
-            element,
-            args['station'])
+        data = get_data(
+            Observation,
+            Observation.query,
+            ObservationFilter(args['station'], element),
+        )
 
         return create_response(data, element)
 
-    @app.route('/graph/models', methods=['GET'])
+    @app.route('/graph/predictions', methods=['GET'])
     @use_args(
-        MODELS_GRAPH_ARGS,
+        PREDICTION_GRAPH_ARGS,
         error_status_code=http.HTTPStatus.BAD_REQUEST,
         location='query')
-    def get_models_graph(args: dict[str, Any]):
-        element = args['element']
-        data = get_model_data(
-            app.open_resource,
-            element,
-            args['station'],
-            args['model'],
-            args['scenario'])
+    def get_predictions_graph(args: dict[str, Any]):
+        data = get_data(
+            Prediction,
+            Prediction.query,
+            PredictionFilter(
+                args['station'],
+                args['model'],
+                args['scenario']),
+        )
 
-        return create_response(data, element)
+        return create_response(data, args['element'])
 
     return app
