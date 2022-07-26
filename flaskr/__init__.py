@@ -17,6 +17,8 @@ from .data import (Element, Scenario, get_data,
 OBSERVATIONS_GRAPH_ARGS = {
     'element': EnumField(Element, required=True),
     'station': fields.List(fields.Str, required=True),
+    'start_year': fields.Integer(required=True),
+    'end_year': fields.Integer(required=True),
 }
 
 PREDICTION_GRAPH_ARGS = {
