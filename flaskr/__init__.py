@@ -85,7 +85,7 @@ def create_app(test_config=None):
         location='query')
     def get_observations_graph(args: dict[str, Any]):
         filter = create_filter(args['station'])
-        data = get_data(Observation, Observation.query, filter)
+        data = get_data(Observation.query, filter)
 
         return create_response(data, args['element'])
 
@@ -100,7 +100,7 @@ def create_app(test_config=None):
             IsInFilter(Prediction.model, args['model']),
             EqualsFilter(Prediction.scenario, args['scenario']))
 
-        data = get_data(Prediction, Prediction.query, filter)
+        data = get_data(Prediction.query, filter)
 
         return create_response(data, args['element'])
 

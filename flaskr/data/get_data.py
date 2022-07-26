@@ -5,8 +5,7 @@ from .filters import FilterBase
 
 
 def get_data(
-        table: Model,
         query: BaseQuery,
         filter: FilterBase) -> pd.DataFrame:
-    query = filter.filter(table, query)
+    query = filter.filter(query)
     return pd.read_sql(query.statement, query.session.bind)
