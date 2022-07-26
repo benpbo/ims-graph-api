@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Iterable
 
 from flask_sqlalchemy import BaseQuery
-from sqlalchemy import Column, and_
+from sqlalchemy import Column
 
 
 class Scenario(str, Enum):
@@ -16,7 +16,7 @@ class Scenario(str, Enum):
 class FilterBase(ABC):
     def filter(self, query: BaseQuery) -> BaseQuery:
         criterions = self.create_criterion()
-        return query.filter(and_(*criterions))
+        return query.filter(*criterions)
 
     @abstractmethod
     def create_criterion(self) -> Iterable:
