@@ -10,11 +10,8 @@ from sqlalchemy import and_, or_
 from .common import ElementType
 
 MISSING_OBSERVATION = -99.9
-SCENARIO_COL = 'scenario'
-MODEL_COL = 'model'
 
-
-class Scenario(Enum):
+class Scenario(str, Enum):
     RCP45 = 'rcp45'
     RCP85 = 'rcp85'
 
