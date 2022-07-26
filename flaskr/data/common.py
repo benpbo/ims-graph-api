@@ -16,24 +16,11 @@ GRAPH_COLUMNS = [YEAR_COL, MONTH_COL, DAY_COL, VALUE_COL,
                  STATION_COL, SCENARIO_COL, MODEL_COL]
 
 
-class ElementType(Enum):
-    TEMPERATURE = auto()
-    RAIN = auto()
-
-
 class Element(Enum):
     TEMP_MAX = auto()
     TEMP_MIN = auto()
     TEMP_AVG = auto()
     RAIN_MM = auto()
-
-    @property
-    def type(self) -> ElementType:
-        match self:
-            case Element.TEMP_MIN | Element.TEMP_MAX | Element.TEMP_AVG:
-                return ElementType.TEMPERATURE
-            case Element.RAIN_MM:
-                return ElementType.RAIN
 
 
 def transform_to_graph(df: DataFrame, element: Element) -> DataFrame:

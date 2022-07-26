@@ -5,11 +5,8 @@ from enum import Enum
 from typing import Iterable
 
 from flask_sqlalchemy import BaseQuery, Model
-from sqlalchemy import Column, and_, or_
+from sqlalchemy import Column, and_
 
-from .common import ElementType
-
-MISSING_OBSERVATION = -99.9
 
 class Scenario(str, Enum):
     RCP45 = 'rcp45'
@@ -46,22 +43,6 @@ class IsInFilter(FilterBase):
 
     def create_criterion(self, table: Model) -> Iterable:
         yield self._column.in_(self._values)
-
-
-class ObservationFilter(FilterBase):
-    def __init__(self, element_type: ElementType) -> None:
-        super().__init__()
-
-        self._element_type = element_type
-
-    def create_criterion(self, table: Model) -> Iterable:
-        match self._element_type:
-            case ElementType.TEMPERATURE:
-                yield or_(
-                    table.tmin == MISSING_OBSERVATION,
-                    table.tmax == MISSING_OBSERVATION)
-            case ElementType.RAIN:
-                yield table.pr == MISSING_OBSERVATION
 
 
 class PredictionFilter(FilterBase):
