@@ -3,6 +3,7 @@ import os
 from typing import Any
 
 from flask import Flask, Response, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from marshmallow_enum import EnumField
 from pandas import DataFrame
 from webargs import fields
@@ -44,6 +45,38 @@ def create_app(test_config=None):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+
+    db = SQLAlchemy(app)
+
+    class Observation(db.Model):
+        __tablename__ = 'observation'
+
+        id = db.Column(
+            'id', db.Integer, db.Identity(always=True),
+            primary_key=True)
+        year = db.Column('year', db.SmallInteger, nullable=False)
+        month = db.Column('month', db.SmallInteger, nullable=False)
+        day = db.Column('day', db.SmallInteger, nullable=False)
+        station = db.Column('station', db.String, nullable=False)
+        tmin = db.Column('tmin', db.Numeric(4, 2))
+        tmax = db.Column('tmax', db.Numeric(4, 2))
+        pr = db.Column('pr', db.Numeric(5, 2))
+
+    class Prediction(db.Model):
+        __tablename__ = 'prediction'
+
+        id = db.Column(
+            'id', db.Integer, db.Identity(always=True),
+            primary_key=True)
+        year = db.Column('year', db.SmallInteger, nullable=False)
+        month = db.Column('month', db.SmallInteger, nullable=False)
+        day = db.Column('day', db.SmallInteger, nullable=False)
+        station = db.Column('station', db.String, nullable=False)
+        model = db.Column('model', db.String, nullable=False)
+        scenario = db.Column('scenario', db.Enum(Scenario), nullable=False)
+        tmin = db.Column('tmin', db.Numeric(32, 30))
+        tmax = db.Column('tmax', db.Numeric(32, 30))
+        pr = db.Column('pr', db.Numeric(32, 28))
 
     @app.route('/graph/observations', methods=['GET'])
     @use_args(
