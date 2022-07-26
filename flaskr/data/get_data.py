@@ -1,5 +1,5 @@
 import pandas as pd
-from flask_sqlalchemy import BaseQuery, Model
+from flask_sqlalchemy import BaseQuery
 
 from .filters import FilterBase
 
