@@ -10,7 +10,8 @@ from webargs import fields
 from webargs.flaskparser import use_args
 
 from .data import (AggregateFilter, Element, EqualsFilter, FilterBase,
-                   IsInFilter, Scenario, get_data, transform_to_graph)
+                   GreaterThanEqualsFilter, IsInFilter, LessThanEqualsFilter,
+                   Scenario, get_data, transform_to_graph)
 
 OBSERVATIONS_GRAPH_ARGS = {
     'element': EnumField(Element, required=True),
@@ -73,9 +74,14 @@ def create_app(test_config=None):
         model = db.Column('model', db.String, nullable=False)
         scenario = db.Column('scenario', db.Enum(Scenario), nullable=False)
 
-    def create_filter(stations: Iterable[str], *filters: FilterBase) -> FilterBase:
+    def create_filter(
+            stations: Iterable[str],
+            start_year: int, end_year: int,
+            *filters: FilterBase) -> FilterBase:
         return AggregateFilter(
             IsInFilter(BaseColumn.station, stations),
+            GreaterThanEqualsFilter(BaseColumn.year, start_year),
+            LessThanEqualsFilter(BaseColumn.year, end_year),
             *filters)
 
     @app.route('/graph/observations', methods=['GET'])
@@ -84,7 +90,8 @@ def create_app(test_config=None):
         error_status_code=http.HTTPStatus.BAD_REQUEST,
         location='query')
     def get_observations_graph(args: dict[str, Any]):
-        filter = create_filter(args['station'])
+        filter = create_filter(
+            args['station'], args['start_year'], args['end_year'])
         data = get_data(Observation.query, filter)
 
         return create_response(data, args['element'])
@@ -96,7 +103,7 @@ def create_app(test_config=None):
         location='query')
     def get_predictions_graph(args: dict[str, Any]):
         filter = create_filter(
-            args['station'],
+            args['station'], args['start_year'], args['end_year'],
             IsInFilter(Prediction.model, args['model']),
             EqualsFilter(Prediction.scenario, args['scenario']))
 
