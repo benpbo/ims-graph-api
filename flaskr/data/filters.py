@@ -36,6 +36,17 @@ class StationFilter(FilterBase):
         yield table.station.in_(self._stations)
 
 
+class AggregateFilter(FilterBase):
+    def __init__(self, *filters: FilterBase):
+        super().__init__()
+
+        self._filters = filters
+
+    def create_criterion(self, table: Model) -> Iterable:
+        for filter in self._filters:
+            yield from filter.create_criterion(table)
+
+
 class ObservationFilter(StationFilter):
     def __init__(self, stations: Iterable[str], element_type: ElementType) -> None:
         super().__init__(stations)
