@@ -78,9 +78,9 @@ def create_app(test_config=None):
         station = db.Column('station', db.String, nullable=False)
         model = db.Column('model', db.String, nullable=False)
         scenario = db.Column('scenario', db.Enum(Scenario), nullable=False)
-        tmin = db.Column('tmin', db.Numeric(32, 30))
-        tmax = db.Column('tmax', db.Numeric(32, 30))
-        pr = db.Column('pr', db.Numeric(32, 28))
+        tmin = db.Column('tmin', db.Numeric(4, 2))
+        tmax = db.Column('tmax', db.Numeric(4, 2))
+        pr = db.Column('pr', db.Numeric(5, 2))
 
     @app.route('/graph/observations', methods=['GET'])
     @use_args(
