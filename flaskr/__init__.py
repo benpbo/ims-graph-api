@@ -1,6 +1,6 @@
 import http
 import os
-from typing import Any
+from typing import Any, Iterable
 
 from flask import Flask, Response, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -9,9 +9,8 @@ from pandas import DataFrame
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from flaskr.data.filters import PredictionFilter, ObservationFilter
-
-from .data import (Element, Scenario, get_data,
+from .data import (AggregateFilter, Element, FilterBase, ObservationFilter,
+                   PredictionFilter, IsInFilter, Scenario, get_data,
                    transform_to_graph)
 
 OBSERVATIONS_GRAPH_ARGS = {
@@ -75,6 +74,11 @@ def create_app(test_config=None):
         model = db.Column('model', db.String, nullable=False)
         scenario = db.Column('scenario', db.Enum(Scenario), nullable=False)
 
+    def create_filter(stations: Iterable[str], *filters: FilterBase) -> FilterBase:
+        return AggregateFilter(
+            IsInFilter(BaseColumn.station, stations),
+            *filters)
+
     @app.route('/graph/observations', methods=['GET'])
     @use_args(
         OBSERVATIONS_GRAPH_ARGS,
@@ -82,11 +86,11 @@ def create_app(test_config=None):
         location='query')
     def get_observations_graph(args: dict[str, Any]):
         element = args['element']
-        data = get_data(
-            Observation,
-            Observation.query,
-            ObservationFilter(args['station'], element),
-        )
+        filter = create_filter(
+            args['station'],
+            ObservationFilter(element))
+
+        data = get_data(Observation, Observation.query, filter)
 
         return create_response(data, element)
 
@@ -96,14 +100,13 @@ def create_app(test_config=None):
         error_status_code=http.HTTPStatus.BAD_REQUEST,
         location='query')
     def get_predictions_graph(args: dict[str, Any]):
-        data = get_data(
-            Prediction,
-            Prediction.query,
+        filter = create_filter(
+            args['station'],
             PredictionFilter(
-                args['station'],
                 args['model'],
-                args['scenario']),
-        )
+                args['scenario']))
+
+        data = get_data(Prediction, Prediction.query, filter)
 
         return create_response(data, args['element'])
 

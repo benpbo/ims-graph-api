@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Iterable
 
 from flask_sqlalchemy import BaseQuery, Model
-from sqlalchemy import and_, or_
+from sqlalchemy import Column, and_, or_
 
 from .common import ElementType
 
@@ -26,16 +26,6 @@ class FilterBase(ABC):
         ...
 
 
-class StationFilter(FilterBase):
-    def __init__(self, stations: Iterable[str]) -> None:
-        super().__init__()
-
-        self._stations = stations
-
-    def create_criterion(self, table: Model) -> Iterable:
-        yield table.station.in_(self._stations)
-
-
 class AggregateFilter(FilterBase):
     def __init__(self, *filters: FilterBase):
         super().__init__()
@@ -47,15 +37,24 @@ class AggregateFilter(FilterBase):
             yield from filter.create_criterion(table)
 
 
-class ObservationFilter(StationFilter):
-    def __init__(self, stations: Iterable[str], element_type: ElementType) -> None:
-        super().__init__(stations)
+class IsInFilter(FilterBase):
+    def __init__(self, column: Column, values: Iterable) -> None:
+        super().__init__()
+
+        self._column = column
+        self._values = values
+
+    def create_criterion(self, table: Model) -> Iterable:
+        yield self._column.in_(self._values)
+
+
+class ObservationFilter(FilterBase):
+    def __init__(self, element_type: ElementType) -> None:
+        super().__init__()
 
         self._element_type = element_type
 
     def create_criterion(self, table: Model) -> Iterable:
-        yield from super().create_criterion(table)
-
         match self._element_type:
             case ElementType.TEMPERATURE:
                 yield or_(
@@ -65,18 +64,13 @@ class ObservationFilter(StationFilter):
                 yield table.pr == MISSING_OBSERVATION
 
 
-class PredictionFilter(StationFilter):
-    def __init__(
-            self,
-            stations: Iterable[str],
-            models: Iterable[str],
-            scenario: Scenario) -> None:
-        super().__init__(stations)
+class PredictionFilter(FilterBase):
+    def __init__(self, models: Iterable[str], scenario: Scenario) -> None:
+        super().__init__()
 
         self._models = models
         self._scenario = scenario
 
     def create_criterion(self, table: Model) -> Iterable:
-        yield from super().create_criterion(table)
         yield table.model.in_(self._models)
         yield table.scenario == self._scenario

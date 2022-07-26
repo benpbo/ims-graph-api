@@ -1,3 +1,4 @@
 from .common import Element, transform_to_graph
-from .filters import PredictionFilter, ObservationFilter, Scenario
+from .filters import (AggregateFilter, ObservationFilter, PredictionFilter,
+                      IsInFilter, Scenario, FilterBase)
 from .get_data import get_data
