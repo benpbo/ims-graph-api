@@ -52,35 +52,26 @@ def create_app(test_config=None):
 
     db = SQLAlchemy(app)
 
-    class Observation(db.Model):
+    class BaseColumn:
+        id = db.Column(
+            'id', db.Integer, db.Identity(always=True),
+            primary_key=True)
+        year = db.Column('year', db.SmallInteger, nullable=False)
+        month = db.Column('month', db.SmallInteger, nullable=False)
+        day = db.Column('day', db.SmallInteger, nullable=False)
+        station = db.Column('station', db.String, nullable=False)
+        tmin = db.Column('tmin', db.Numeric(4, 2))
+        tmax = db.Column('tmax', db.Numeric(4, 2))
+        pr = db.Column('pr', db.Numeric(5, 2))
+
+    class Observation(BaseColumn, db.Model):
         __tablename__ = 'observation'
 
-        id = db.Column(
-            'id', db.Integer, db.Identity(always=True),
-            primary_key=True)
-        year = db.Column('year', db.SmallInteger, nullable=False)
-        month = db.Column('month', db.SmallInteger, nullable=False)
-        day = db.Column('day', db.SmallInteger, nullable=False)
-        station = db.Column('station', db.String, nullable=False)
-        tmin = db.Column('tmin', db.Numeric(4, 2))
-        tmax = db.Column('tmax', db.Numeric(4, 2))
-        pr = db.Column('pr', db.Numeric(5, 2))
-
-    class Prediction(db.Model):
+    class Prediction(BaseColumn, db.Model):
         __tablename__ = 'prediction'
 
-        id = db.Column(
-            'id', db.Integer, db.Identity(always=True),
-            primary_key=True)
-        year = db.Column('year', db.SmallInteger, nullable=False)
-        month = db.Column('month', db.SmallInteger, nullable=False)
-        day = db.Column('day', db.SmallInteger, nullable=False)
-        station = db.Column('station', db.String, nullable=False)
         model = db.Column('model', db.String, nullable=False)
         scenario = db.Column('scenario', db.Enum(Scenario), nullable=False)
-        tmin = db.Column('tmin', db.Numeric(4, 2))
-        tmax = db.Column('tmax', db.Numeric(4, 2))
-        pr = db.Column('pr', db.Numeric(5, 2))
 
     @app.route('/graph/observations', methods=['GET'])
     @use_args(
