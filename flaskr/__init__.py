@@ -9,8 +9,8 @@ from pandas import DataFrame
 from webargs import fields
 from webargs.flaskparser import use_args
 
-from .data import (AggregateFilter, Element, FilterBase, IsInFilter,
-                   PredictionFilter, Scenario, get_data, transform_to_graph)
+from .data import (AggregateFilter, Element, EqualsFilter, FilterBase,
+                   IsInFilter, Scenario, get_data, transform_to_graph)
 
 OBSERVATIONS_GRAPH_ARGS = {
     'element': EnumField(Element, required=True),
@@ -97,9 +97,8 @@ def create_app(test_config=None):
     def get_predictions_graph(args: dict[str, Any]):
         filter = create_filter(
             args['station'],
-            PredictionFilter(
-                args['model'],
-                args['scenario']))
+            IsInFilter(Prediction.model, args['model']),
+            EqualsFilter(Prediction.scenario, args['scenario']))
 
         data = get_data(Prediction, Prediction.query, filter)
 

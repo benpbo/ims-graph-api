@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Iterable
+from typing import Any, Iterable
 
 from flask_sqlalchemy import BaseQuery, Model
 from sqlalchemy import Column, and_
@@ -45,13 +45,12 @@ class IsInFilter(FilterBase):
         yield self._column.in_(self._values)
 
 
-class PredictionFilter(FilterBase):
-    def __init__(self, models: Iterable[str], scenario: Scenario) -> None:
+class EqualsFilter(FilterBase):
+    def __init__(self, column: Column, value: Any) -> None:
         super().__init__()
 
-        self._models = models
-        self._scenario = scenario
+        self._column = column
+        self._value = value
 
     def create_criterion(self, table: Model) -> Iterable:
-        yield table.model.in_(self._models)
-        yield table.scenario == self._scenario
+        yield self._column == self._value
