@@ -54,3 +54,25 @@ class EqualsFilter(FilterBase):
 
     def create_criterion(self) -> Iterable:
         yield self._column == self._value
+
+
+class LessThanEqualsFilter(FilterBase):
+    def __init__(self, column: Column, value: Any) -> None:
+        super().__init__()
+
+        self._column = column
+        self._value = value
+
+    def create_criterion(self) -> Iterable:
+        yield self._column <= self._value
+
+
+class GreaterThanEqualsFilter(FilterBase):
+    def __init__(self, column: Column, value: Any) -> None:
+        super().__init__()
+
+        self._column = column
+        self._value = value
+
+    def create_criterion(self) -> Iterable:
+        yield self._column >= self._value
