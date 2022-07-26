@@ -39,13 +39,13 @@ class Element(Enum):
 def transform_to_graph(df: DataFrame, element: Element) -> DataFrame:
     match element:
         case Element.TEMP_MIN:
-            graph = df.rename({TEMP_MIN_COL: VALUE_COL})
+            graph = df.rename(columns={TEMP_MIN_COL: VALUE_COL})
         case Element.TEMP_MAX:
-            graph = df.rename({TEMP_MAX_COL: VALUE_COL})
+            graph = df.rename(columns={TEMP_MAX_COL: VALUE_COL})
         case Element.TEMP_AVG:
             temp_avg = df[[TEMP_MIN_COL, TEMP_MAX_COL]].mean(axis=1)
             graph = df.assign(**{VALUE_COL: temp_avg})
         case Element.RAIN_MM:
-            graph = df.rename({RAIN_MM_COL: VALUE_COL})
+            graph = df.rename(columns={RAIN_MM_COL: VALUE_COL})
 
     return graph[graph.columns.intersection(GRAPH_COLUMNS)]
