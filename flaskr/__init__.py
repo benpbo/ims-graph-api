@@ -28,6 +28,8 @@ PREDICTION_GRAPH_ARGS = {
 
 def create_response(data: DataFrame, element: Element) -> Response:
     graph = transform_to_graph(data, element)
+    graph = graph.dropna()
+
     return jsonify(graph.to_dict(orient='records'))
 
 
