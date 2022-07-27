@@ -18,6 +18,7 @@ OBSERVATIONS_GRAPH_ARGS = {
     'station': fields.List(fields.Str, required=True),
     'start_year': fields.Integer(required=True),
     'end_year': fields.Integer(required=True),
+    'month': fields.List(fields.Integer),
 }
 
 PREDICTION_GRAPH_ARGS = {
@@ -77,7 +78,11 @@ def create_app(test_config=None):
     def create_filter(
             stations: Iterable[str],
             start_year: int, end_year: int,
+            months: Iterable[int],
             *filters: FilterBase) -> FilterBase:
+        if months:
+            filters = (*filters, IsInFilter(BaseColumn.month, months))
+
         return AggregateFilter(
             IsInFilter(BaseColumn.station, stations),
             GreaterThanEqualsFilter(BaseColumn.year, start_year),
@@ -91,7 +96,9 @@ def create_app(test_config=None):
         location='query')
     def get_observations_graph(args: dict[str, Any]):
         filter = create_filter(
-            args['station'], args['start_year'], args['end_year'])
+            args['station'],
+            args['start_year'], args['end_year'],
+            args.get('month', []))
         data = get_data(Observation.query, filter)
 
         return create_response(data, args['element'])
@@ -103,7 +110,9 @@ def create_app(test_config=None):
         location='query')
     def get_predictions_graph(args: dict[str, Any]):
         filter = create_filter(
-            args['station'], args['start_year'], args['end_year'],
+            args['station'],
+            args['start_year'], args['end_year'],
+            args.get('month', []),
             IsInFilter(Prediction.model, args['model']),
             EqualsFilter(Prediction.scenario, args['scenario']))
 
