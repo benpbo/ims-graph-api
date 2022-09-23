@@ -1,19 +1,25 @@
+from typing import Iterable, Optional, Union
 import streamlit as st
 import pandas as pd
+from calculate_graphs import calculate_graphs
 
 ### CONSTS ###
 ELEMENTS = ['TEMP_MIN', 'TEMP_MAX', 'TEMP_AVG', 'RAIN']
-MODELS = ['cnrm_cclm','had_cclm','knmi_racm','mpi_remo','cccma_rca','cnrm_rca','csiro_rca','ipsl_rca','miroc_rca','had_rca','mpi_rca','noaa_rca']
+MODELS = ['cnrm_cclm', 'had_cclm', 'knmi_racm', 'mpi_remo', 'cccma_rca', 'cnrm_rca',
+          'csiro_rca', 'ipsl_rca', 'miroc_rca', 'had_rca', 'mpi_rca', 'noaa_rca']
 SCENARIOS = ['RCP45', 'RCP85']
-STATIONS_TEMP = ['afula', 'akko', 'avne_etan', 'beer_sheva', 'beit_jimal', 'besor_farm', 'bet_dagan', 'bet_zayda', 'dafna', 'dorot', 'elat', 'eLON', 'en_hahoresh', 'galed', 'gat', 'harashim', 'hazerim', 'hazeva', 'jerusalem_centre', 'kefar_blum', 'kefar_yehoshua', 'lahav', 'merom_golan', 'negba', 'qevuzat_yavne', 'rosh_zurim', 'sede_boqer', 'sede_eliyyahu', 'sedom', 'tavor_kadoorie', 'tel_aviv_coast', 'yotvata', 'zefat_har_kenaan', 'zemah']
-STATIONS_RAIN = [] ## ***FILL!!!
+TEMPERATURE_STATIONS = ['afula', 'akko', 'avne_etan', 'beer_sheva', 'beit_jimal', 'besor_farm', 'bet_dagan', 'bet_zayda', 'dafna', 'dorot', 'elat', 'eLON', 'en_hahoresh', 'galed', 'gat', 'harashim', 'hazerim', 'hazeva', 'jerusalem_centre',
+                        'kefar_blum', 'kefar_yehoshua', 'lahav', 'merom_golan', 'negba', 'qevuzat_yavne', 'rosh_zurim', 'sede_boqer', 'sede_eliyyahu', 'sedom', 'tavor_kadoorie', 'tel_aviv_coast', 'yotvata', 'zefat_har_kenaan', 'zemah']
+RAIN_STATIONS = []  # ***FILL!!!
 MONTHS = list(range(1, 12 + 1))
 CALCULATIONS = ['Average', 'Max', 'Min']
 
-MIN_OBSV_YEAR = 1950
-MAX_OBSV_YEAR = 2017
-MIN_PRED_YEAR = 2006
-MAX_PRED_YEAR = 2100
+OBSERVATIONS_TIME_RANGE = (1950, 2017)
+PROJECTIONS_TIME_RANGE = (2006, 2100)
+MIXED_TIME_RANGE = (
+    min(OBSERVATIONS_TIME_RANGE[0], PROJECTIONS_TIME_RANGE[0]),
+    max(OBSERVATIONS_TIME_RANGE[1], PROJECTIONS_TIME_RANGE[1]),
+)
 
 MODEL_COL = 'model'
 SCENARIO_COL = 'scenario'
@@ -22,86 +28,157 @@ TEXT_CHOOSE = 'Choose the {0} you want to use'
 
 CSV_DOWNLOAD_NAME = 'df.csv'
 
-### GLOBALS ###
 
-element = None
-observations = None
-predictions = None
-models_list = None
-scenarios_list = None
-station_list = None
-data_time_range = None
-line_time_range = None
-resolution = None
-calculation = None
-show_all_models = None
-show_average = None
-show_line = None
+class UserInput:
+    def __init__(self,
+                 element: str,
+                 models_list: Iterable[str],
+                 scenarios_list: Iterable[str],
+                 station_list: Iterable[str],
+                 resolution: Iterable[int],
+                 data_time_range: tuple[int, int],
+                 baseline_time_range: Optional[tuple[int, int]],
+                 show_all_models: bool,
+                 show_average: bool,
+                 calculation: str) -> None:
+        self.element = element
+        self.models_list = models_list
+        self.scenarios_list = scenarios_list
+        self.station_list = station_list
+        self.resolution = resolution
+        self.data_time_range = data_time_range
+        self.baseline_time_range = baseline_time_range
+        self.show_all_models = show_all_models
+        self.show_average = show_average
+        self.calculation = calculation
 
-### FUNCTIONS ###
 
 def create_checkbox_group(group_data):
-	checkboxes = [st.checkbox(str(item)) for item in group_data]
-	return [box for box in checkboxes if box]
-
-def user_inputs():
-
-	element = st.radio(TEXT_CHOOSE.format('element'), ELEMENTS)
-
-	st.write(TEXT_CHOOSE.format('data'))
-	observations = st.checkbox('Observations')
-	predictions = st.checkbox('Projections')
-	if predictions:
-		st.write(TEXT_CHOOSE.format('models'))
-		models_list = create_checkbox_group(MODELS)
-		st.write(TEXT_CHOOSE.format('scenarios'))
-		scenarios_list = create_checkbox_group(SCENARIOS)
-
-	#st.write(TEXT_CHOOSE.format('stations'))
-	if element == 'RAIN':
-		station_list = st.multiselect(TEXT_CHOOSE.format('stations'), STATIONS_RAIN)
-	else:
-		station_list = st.multiselect(TEXT_CHOOSE.format('stations'), STATIONS_TEMP)
-
-	if observations or predictions:
-		time_range_min = MIN_PRED_YEAR
-		time_range_max = MAX_OBSV_YEAR
-		if observations:
-			time_range_min = MIN_OBSV_YEAR
-		if predictions:
-			time_range_max = MAX_PRED_YEAR
-		data_time_range = st.select_slider('Select the period range (years)', options=list(
-			range(time_range_min, time_range_max + 1)), value=(time_range_min, time_range_max))
-
-	st.write(TEXT_CHOOSE.format('months'))
-	resolution = create_checkbox_group(MONTHS)
-
-	calculation = st.radio(TEXT_CHOOSE.format('calculations'), CALCULATIONS)
-
-	st.write('Choose graph settings:')
-	show_all_models = st.checkbox('Show all models')
-	show_average = st.checkbox('Show ensemble-mean models')
-
-	st.write('Add base line')
-	show_line = st.checkbox('Add base line')
-	if show_line:
-		line_time_range = st.select_slider('Select the reference period (years)', options=list(
-			range(time_range_min, time_range_max + 1)), value=(time_range_min, time_range_max))
+    checkboxes = [st.checkbox(str(item)) for item in group_data]
+    return [box for box in checkboxes if box]
 
 
-### MAIN ###
-user_inputs()
-#query_db()
-#get_df
-EXAMPLE_DF = pd.DataFrame([[1, 2],[3, 4]])
-graph_df = EXAMPLE_DF
-#print df
-st.write('Graph:')
-st.line_chart(graph_df)
+def get_input() -> Union[UserInput, str]:
+    element = st.radio(TEXT_CHOOSE.format('element'), ELEMENTS)
 
-st.download_button(
-    label="Download data as CSV",
-    data=graph_df.to_csv().encode('utf-8'),
-    file_name=CSV_DOWNLOAD_NAME,
-    mime='text/csv',
-)
+    available_stations: list[str]
+    match element:
+        case 'RAIN':
+            available_stations = RAIN_STATIONS
+        case 'TEMP_MIN' | 'TEMP_MAX' | 'TEMP_AVG':
+            available_stations = TEMPERATURE_STATIONS
+        case _:
+            return f'No stations for element: "{element}"'
+
+    st.write(TEXT_CHOOSE.format('data source'))
+    observations = st.checkbox('Observations')
+    projections = st.checkbox('Projections')
+
+    data_range: tuple[int, int]
+    match (observations, projections):
+        case (True, False):
+            data_range = OBSERVATIONS_TIME_RANGE
+        case (False, True):
+            data_range = PROJECTIONS_TIME_RANGE
+        case (True, True):
+            data_range = (
+                min(OBSERVATIONS_TIME_RANGE[0], PROJECTIONS_TIME_RANGE[0]),
+                max(OBSERVATIONS_TIME_RANGE[1], PROJECTIONS_TIME_RANGE[1]),
+            )
+        case _:
+            return 'Please select either observations or projections'
+
+    time_range_min, time_range_max = data_range
+    data_range_values: list[int] = list(range(
+        time_range_min,
+        time_range_max + 1))
+
+    models_list: Optional[list[str]] = None
+    scenarios_list: Optional[list[str]] = None
+    if projections:
+        models_list = st.multiselect(
+            TEXT_CHOOSE.format('models'), MODELS)
+        scenarios_list = st.multiselect(
+            TEXT_CHOOSE.format('scenarios'), SCENARIOS)
+
+    station_list = st.multiselect(
+        TEXT_CHOOSE.format('stations'), available_stations)
+    if not station_list:
+        return 'Please select a station'
+
+    selected_data_range = st.select_slider(
+        'Select the period range (years)',
+        options=data_range_values,
+        value=data_range)
+
+    resolution = st.multiselect(TEXT_CHOOSE.format('months'), MONTHS)
+    calculation = st.radio(
+        TEXT_CHOOSE.format('calculations'), CALCULATIONS)
+
+    show_all_models: bool = False
+    show_average: bool = False
+    if projections:
+        st.write('Choose graph settings:')
+        show_all_models = st.checkbox('Show all models')
+        show_average = st.checkbox('Show ensemble-mean models')
+
+    st.write('Base line:')
+    selected_baseline_range: Optional[tuple[int, int]] = None
+    if st.checkbox('Add base line'):
+        baseline_range_min, baseline_range_max = OBSERVATIONS_TIME_RANGE
+        baseline_range_values: list[int] = list(range(
+            baseline_range_min,
+            baseline_range_max + 1))
+
+        selected_baseline_range = st.select_slider(
+            'Select the reference period (years)',
+            options=baseline_range_values,
+            value=OBSERVATIONS_TIME_RANGE)
+
+    return UserInput(element,
+                     models_list,
+                     scenarios_list,
+                     station_list,
+                     resolution,
+                     selected_data_range,
+                     selected_baseline_range,
+                     show_all_models,
+                     show_average,
+                     calculation)
+
+
+def print_graph(input: UserInput):
+    df = calculate_graphs(input.element,
+                          input.models_list,
+                          input.scenarios_list,
+                          input.station_list,
+                          input.resolution,
+                          input.data_time_range,
+                          input.baseline_time_range,
+                          input.show_all_models,
+                          input.show_average,
+                          input.calculation)
+    graph_df = pd.read_json(df)
+
+    st.write('Graph:')
+    st.line_chart(graph_df)
+
+    st.download_button(
+        label='Download data as CSV',
+        data=graph_df.to_csv().encode('utf-8'),
+        file_name=CSV_DOWNLOAD_NAME,
+        mime='text/csv',
+    )
+
+
+def main():
+    match get_input():
+        case UserInput() as input:
+            if st.button('Print Graph'):
+                print_graph(input)
+        case str() as error_message:
+            st.error(error_message)
+
+
+if __name__ == '__main__':
+    main()
