@@ -20,17 +20,6 @@ from typing import Iterable, Optional
 import requests
 import pandas as pd
 
-### CONSTS ###
-
-TEST_CSV = r'C:\Users\עינב\Documents\ecoton\test_table.csv'
-
-# CSV DATA
-TEST_CSV_AVG = r'C:\Users\עינב\Documents\ecoton\temperature_comb_stations_avg.csv'
-TEST_CSV_MIN = r'C:\Users\עינב\Documents\ecoton\temperature_comb_stations_min.csv'
-TEST_CSV_MAX = r'C:\Users\עינב\Documents\ecoton\temperature_comb_stations_max.csv'
-TEST_CSV_MODEL_DOROT_MAX = r'C:\Users\עינב\Documents\ecoton\dorot_tmax_12models_rcp45_rcp85_qdm.csv'
-TEST_CSV_MODEL_DOROT_MIN = r'C:\Users\עינב\Documents\ecoton\dorot_tmin_12models_rcp45_rcp85_qdm.csv'
-
 # Colunms names
 DATA_COL = 'value'
 YEAR_COL = 'year'
